@@ -1,0 +1,13 @@
+# Quarto internal files
+/.quarto/
+/_site/
+
+# Jupyter & Python cache files
+.jupyter_cache/
+*/.jupyter_cache/
+__pycache__/
+*.pyc
+
+# Operating system junk
+.DS_Store
+Thumbs.db

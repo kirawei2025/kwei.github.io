@@ -1,0 +1,16 @@
+/* 1. Force the container to wrap lines */
+div.sourceCode pre.sourceCode {
+  white-space: pre-wrap !important;
+}
+
+/* 2. Target the specific code lines and prevent them from resetting to the left */
+div.sourceCode pre.sourceCode code {
+  white-space: pre-wrap !important;
+  display: block !important;
+}
+.figure-caption, figcaption {
+  text-align: center !important;
+  font-size: 0.75rem;
+  font-style: italic;
+  opacity: 0.7;
+}

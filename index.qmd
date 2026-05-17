@@ -1,0 +1,38 @@
+---
+title: "Kira Wei's Portfolio"
+pagetitle: "Fernando da Silva — Portfolio and blog of a half Data Scientist half Macroeconomist"
+author: ""
+image: images/kirawei.png
+about:
+  template: trestles
+  image-width: 12em
+  image-shape: round
+  links:
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/mengjiawei/
+    - icon: github
+      text: Github
+      href: https://github.com/kirawei2025
+    - icon: envelope-fill
+      text: E-mail
+      href: "mailto:kiraofsimon@gmail.com"
+format:
+  html:
+    code-tools: false
+---
+
+
+<div id="abouten">
+I'm a data scientist specialized in economics and finance. I try to solve real world problems with simple models.
+
+In college, where I studied economics, I founded to analyze data and discovered my vocation there. Today I work at focused on time series analysis, econometrics, and machine learning applications, aiming to explain and predict the behavior of economic variables, allowing data-based decisions. My work has already helped over students.
+
+My main skills in my are predictive models; time series; data analysis and visualization; data products such as reports and dashboards; and technologies such as R, Python, Git, GitHub, and SQL.
+
+I love constantly learning new things, sharing knowledge openly and interacting with people on these topics.
+</div>
+
+
+<script src="styles/js/txt-animate.js"></script>
+<script src="styles/js/txt-showhide.js"></script>

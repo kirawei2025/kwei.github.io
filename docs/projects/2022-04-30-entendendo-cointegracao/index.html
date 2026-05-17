@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Fernando da Silva">
+<meta name="dcterms.date" content="2022-04-30">
+<meta name="description" content="Uma analogia sobre cointegração de Engle-Granger e uma aplicação em R">
+
+<title>O andar do bêbado e seu cachorro: entendendo cointegração no R – Kira Wei</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../images/kirawei.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-e1acd5637c463893ad826fee27f89eaf.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-3260d866896717bf08a0df898a0d5767.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles/css/styles.css">
+<meta property="og:title" content="O andar do bêbado e seu cachorro: entendendo cointegração no R – Kira Wei">
+<meta property="og:description" content="Uma analogia sobre cointegração de Engle-Granger e uma aplicação em R">
+<meta property="og:image" content="https://fortietwo.com/projects/2022-04-30-entendendo-cointegracao/imgs/random_walk.png">
+<meta property="og:site_name" content="Kira Wei">
+<meta property="og:image:height" content="1200">
+<meta property="og:image:width" content="2100">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Kira Wei</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../projects.html"> 
+<span class="menu-text">Data Science Projects</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../projects.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/mengjiawei/"> <i class="bi bi-linkedin" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/kirawei2025"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:kiraofsimon@gmail.com"> <i class="bi bi-envelope-fill" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-page-left">
+      <div class="quarto-title-block"><div><h1 class="title">O andar do bêbado e seu cachorro: entendendo cointegração no R</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+                  <div>
+        <div class="description">
+          Uma analogia sobre cointegração de Engle-Granger e uma aplicação em R
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Time Series</div>
+                <div class="quarto-category">Cointegration</div>
+                <div class="quarto-category">R</div>
+                <div class="quarto-category">Português</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta column-page-left">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Fernando da Silva </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">April 30, 2022</p>
+      </div>
+    </div>
+    
+      <div>
+      <div class="quarto-title-meta-heading">Modified</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date-modified">March 10, 2023</p>
+      </div>
+    </div>
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#a-analogia-do-bêbado-e-seu-cachorro" id="toc-a-analogia-do-bêbado-e-seu-cachorro" class="nav-link active" data-scroll-target="#a-analogia-do-bêbado-e-seu-cachorro">A analogia do bêbado e seu cachorro</a></li>
+  <li><a href="#cointegração-no-sentido-de-engle-granger" id="toc-cointegração-no-sentido-de-engle-granger" class="nav-link" data-scroll-target="#cointegração-no-sentido-de-engle-granger">Cointegração no sentido de Engle-Granger</a></li>
+  <li><a href="#teste-de-cointegração-de-engle-granger" id="toc-teste-de-cointegração-de-engle-granger" class="nav-link" data-scroll-target="#teste-de-cointegração-de-engle-granger">Teste de Cointegração de Engle-Granger</a></li>
+  <li><a href="#exemplo-no-r" id="toc-exemplo-no-r" class="nav-link" data-scroll-target="#exemplo-no-r">Exemplo no R</a></li>
+  <li><a href="#referências" id="toc-referências" class="nav-link" data-scroll-target="#referências">Referências</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+
+
+
+
+
+<p>Muito utilizado no mercado financeiro para estratégias <em>long-short</em>, arbitragem estatística, <em>pairs trading</em> e em análise e previsão de séries temporais macroeconômicas, o conceito de cointegração é ao mesmo tempo fascinante e intimidador de se compreender. Por isso, neste breve texto iremos explicar o que é cointegração com um exemplo intuitivo e fazer um exercício simples aplicando o teste de cointegração de Engle-Granger com pares de ações brasileiras usando o R!</p>
+<section id="a-analogia-do-bêbado-e-seu-cachorro" class="level2">
+<h2 class="anchored" data-anchor-id="a-analogia-do-bêbado-e-seu-cachorro">A analogia do bêbado e seu cachorro</h2>
+<p>As definições matemáticas de cointegração, e tópicos relacionados, são um tanto quanto sofisticadas, mas o seu conceito é simples o suficiente para ser introduzido com a cômica analogia do andar do bêbado e seu cachorro. Os créditos da analogia são inteiramente de Michael P. Murray que escreveu, em 1994, um <em>paper</em> didático de apenas 3 páginas elucidando o conceito de cointegração com o conto do andar do bêbado.</p>
+<p>Imagine que você esteja andando na rua da sua cidade e aviste um bêbado que acaba de sair do bar, vagando em direção a sua casa. Você percebe que o bêbado caminha de maneira peculiar e imprevisível, algumas vezes se desviando para a esquerda e outras para a direita enquanto tenta, com dificuldades, seguir o seu caminho. Ao observar a trajetória do bêbado pode-se dizer que seus passos são nada mais do que uma sequência aleatória de passos. Na econometria, chamamos a trajetória do bêbado de <strong>passeio aleatório</strong> (<em>random walk</em>), de maneira a descrever o comportamento de muitas das séries econômicas que existem.</p>
+<p>Por andar de forma aleatória, se você desviar o olhar e parar de observar o bêbado andando, será difícil dizer onde o bêbado estará após um determinado tempo, pois sua trajetória é imprevisível. Uma das características das trajetórias do tipo passeio aleatório, como a do bêbado, é de que a melhor previsão sobre um valor futuro é o último valor observado. Dessa forma, o seu palpite sobre a localização atual do bêbado poderia ser algo como o último lugar onde você o avistou, ou seja, na saída do bar.</p>
+<p>Agora imagine que o bêbado tenha um cachorro amigo, sem coleira, que o acompanha. De forma similar ao bêbado, o cachorro também segue uma sequência aleatória de passos, sendo atraído por cada cheiro novo e estímulos que sente no caminho. Sempre que o bêbado percebe que o cachorro foi muito longe ele o chama: “Thor!”. E o cachorro obedece o chamado retornando para perto de seu dono, caracterizando assim uma correção da distância entre ambos.</p>
+<p>Se fossemos representar por meio de um gráfico a trajetória do bêbado e do cachorro ao longo do tempo e em relação a um ponto de referência qualquer (como o bar), seria algo como:</p>
+<p><img src="imgs/random_walk.png" class="img-fluid"></p>
+<p>Observando as trajetórias de ambos, pode-se dizer que mesmo que a localização atual do bêbado após um tempo seja imprevisível, a localização do cachorro é relativamente previsível, pois ele não se afastará muito do seu dono. Dessa forma, agora um bom palpite sobre a localização do bêbado, por exemplo, pode ser dado uma vez que você tenha encontrado o cachorro, e vice-versa, pois conforme seguem dando passos aleatórios também corrigem a distância entre ambos. Na econometria, chamamos isso formalmente de <strong>mecanismo de correção de erros</strong>.</p>
+<p>Note, também, que ambas as trajetórias são o que chamamos de séries temporais não-estacionárias, dado que quanto mais tempo passa é mais provável que o bêbado e seu cachorro estejam vagando bem longe de onde foram vistos por último. Se for verdade que a distância entre eles seja corrigida por um mecanismo de correção de erros, então a distância entre as trajetórias é dita <em>cointegrada de ordem zero</em>.</p>
+<p>Para entender o que a expressão <em>cointegrada de ordem zero</em> significa, vale primeiro entender o que são <em>séries integradas</em>. Séries temporais não-estacionárias que se tornam estacionárias quando diferenciadas <em>n</em> vezes são ditas <em>integradas de ordem n</em> ou, simplesmente, <span class="math inline">\(\text{I}(n)\)</span>. Para duas séries temporais serem cointegradas, cada série precisa ser integrada de mesma ordem, <em>n</em>; por isso o termo <em>cointegração</em>. Sendo assim, um conjunto de séries temporais, todas integradas de ordem <em>n</em>, são ditas cointegradas se e somente se alguma combinação linear das séries é integrada de ordem menor do que <em>n</em>. Tal combinação linear foi chamada de <strong>relação de cointegração</strong>, conforme o trabalho de Engle e Granger (1987).</p>
+</section>
+<section id="cointegração-no-sentido-de-engle-granger" class="level2">
+<h2 class="anchored" data-anchor-id="cointegração-no-sentido-de-engle-granger">Cointegração no sentido de Engle-Granger</h2>
+<p>De maneira um pouco mais formal, partindo de um modelo de passeio aleatório para as trajetórias do bêbado (<span class="math inline">\(x_t\)</span>) e do cachorro (<span class="math inline">\(y_t\)</span>), temos:</p>
+<p><span class="math display">\[u_t = x_t - x_{t-1}\]</span> <span class="math display">\[w_t = y_t - y_{t-1}\]</span></p>
+<p>onde <span class="math inline">\(u_t\)</span> e <span class="math inline">\(w_t\)</span> representam, respectivamente, o passeio aleatório do bêbado e do cachorro ao longo do tempo <span class="math inline">\(t\)</span> e são ruído branco estacionários. Podemos então modelar a “trajetória cointegrada” do bêbado e do cachorro como:</p>
+<p><span class="math display">\[u_t + c(y_{t-1} - x_{t-1}) = x_t - x_{t-1}\]</span> <span class="math display">\[w_t + d(x_{t-1} - y_{t-1}) = y_t - y_{t-1}\]</span></p>
+<p>onde <span class="math inline">\(u_t\)</span> e <span class="math inline">\(w_t\)</span> são novamente os passeios aleatórios do bêbado e do cachorro e os termos adicionais no lado esquerdo das equações são os <em>termos de correção de erro</em> pelo quais o bêbado e o cachorro corrigem a distância um do outro, ou seja, permanecem próximos. Podemos então dizer que, das equações acima, <span class="math inline">\((y_{t-1} - x_{t-1})\)</span> é uma relação de cointegração entre a trajetória do bêbado e do cachorro. Dessa forma, se estabelece uma relação de equilíbrio de longo prazo entre as trajetórias.</p>
+<p>Note que se os termos de correção de erros forem não-estacionários, então as trajetórias modeladas para o bêbado e o cachorro também seriam não-estacionárias, portanto ambos iriam provavelmente se distanciar bastante ao longo do tempo. Nesse caso, diríamos que as séries temporais das trajetórias do bêbado e do cachorro não são cointegradas de ordem zero. No entanto, Engle e Granger (1987) provaram que se a trajetória do bêbado e do cachorro são ambas integradas de ordem 1 e seguem o descrito nas equações acima, então as trajetórias cointegram.</p>
+<p>A analogia do bêbado e seu cachorro é uma boa forma de entender os conceitos básicos de cointegração e do mecanismo de correção de erro, no entanto, há inúmeros detalhes técnicos que devem ser considerados em aplicações com dados reais. Para se aprofundar mais no tema considere um curso de econometria de séries temporais.</p>
+<p>O conceito de cointegração é bastante utilizado em exercícios de macroeconomia, mas também pode ser usado no mercado financeiro com o objetivo de identificar relações — como a do bêbado e seu cachorro — entre ativos e realizar operações lucrativas com a técnica. Um exemplo disso são as estratégias de <em>pairs trading</em>, onde se realiza operações com pares de ativos que apresentem relação de cointegração de modo a obter lucro com a arbitragem. O grande desafio dessa aplicação é encontrar o par de ativo que apresente essas características.</p>
+</section>
+<section id="teste-de-cointegração-de-engle-granger" class="level2">
+<h2 class="anchored" data-anchor-id="teste-de-cointegração-de-engle-granger">Teste de Cointegração de Engle-Granger</h2>
+<p>De maneira prática, para verificar se um conjunto de séries temporais <span class="math inline">\(y_t\)</span> e <span class="math inline">\(x_t\)</span> cointegram, é preciso seguir os procedimentos propostos por Engle e Granger (1987):</p>
+<ol type="1">
+<li>Verificar se as séries são estacionárias;</li>
+<li>Estimar a regressão cointegrante das séries: <span class="math inline">\(y_t = \alpha + \beta x_t + \epsilon_t\)</span>;</li>
+<li>Verificar se o resíduo da regressão cointegrante é estacionário usando os valores críticos de Engle e Granger (1987);</li>
+<li>Se o resíduo for estacionário, a regressão cointegrante não é espúria e pode-se estimar um modelo de correção de erros para obter a relação de equilíbrio das séries.</li>
+</ol>
+<p>A seguir mostraremos como aplicar o teste com um par de ações negociadas na B3 e para isso usaremos a linguagem R.</p>
+</section>
+<section id="exemplo-no-r" class="level2">
+<h2 class="anchored" data-anchor-id="exemplo-no-r">Exemplo no R</h2>
+<p>O exemplo utilizará o par de ações PETR3 e PETR4 no período de 28 de março de 2021 até 28 de março de 2022. Os dados são públicos e podem ser acessados pelo Yahoo Finance, havendo opção de usar pacotes ou web scraping para extrair os dados. O código abaixo faz a extração e tratamento de dados:</p>
+<p>Antes de partir para o teste vale visualizar as séries temporais:</p>
+<p>As séries parecem apresentar uma trajetória de passeio aleatório, como a do bêbado e seu cachorro, algo comum em séries de ativos financeiros.</p>
+<p>Agora vamos para a primeira etada do teste de cointegração de Engle-Granger, ou seja, verificar se as séries são estacionárias. Podemos fazer isso com o teste ADF através da função <code>adf.test()</code>:</p>
+<p>Conforme os resultados, falhamos em rejeitar a hipótese nula do teste de a série ter raiz unitária, ou seja, as séries são não-estacionárias nos testes considerados (sem constante com tendência, com constante sem tendência e com constante e tendência).</p>
+<p>Identificado que as séries são integradas de mesma ordem (nesse caso I(1), conforme pode ser confirmado usando a função <code>forecast::ndiffs</code>), podemos prosseguir com as etapas 2 e 3 que envolvem estimar a regressão cointegrante e verificar a estacionariedade do resíduo desta regressão. No R, isso tudo pode ser feito com a função <code>coint.test()</code>, que já toma o cuidado de usar os valores críticos corretos para testar os resíduos, conforme MacKinnon (1991).</p>
+<p>Note que a função aplica 3 especificações: sem tendência, com tendência e com tendência quadrática. Em outros pacotes estatísticos e econométricos, como no Gretl, considera-se geralmente somente a primeira. Conforme os resultados, pelo p-valor da primeira especificação, sem tendência, temos que o resíduo da regressão cointegrante é estacionário, mas isso não se verifica para outras especificações. Em outras palavras, há evidências de que <strong>as séries PETR3 e PETR4 cointegram</strong>, para a amostra de dados selecionada e com base no teste sobre o resíduo sem tendência (se o resíduo apresentar tendência, outro tipo do teste deve ser considerado).</p>
+</section>
+<section id="referências" class="level2">
+<h2 class="anchored" data-anchor-id="referências">Referências</h2>
+<p>Abordamos brevemente o conceito de cointegração de séries temporais no sentido de Engle-Granger. Há vários buracos deixados ao longo do texto que precisam de mais espaço e conhecimentos prévios para serem preenchidos. Espero poder abordar outros desses tópicos sobre séries temporais adiante, mas por enquanto aproveite para conferir abaixo os trabalhos citados.</p>
+<p>Engle, R. F., &amp; Granger, C. W. (1987). <em>Co-integration and error correction: representation, estimation, and testing</em>. Econometrica: journal of the Econometric Society, 251-276.</p>
+<p>MacKinnon, J. G. (1991). <em>Critical values for cointegration tests</em>, Ch. 13 in Long-run Economic Relationships: Readings in Cointegration, eds.&nbsp;R. F. Engle and C. W. J. Granger, Oxford, Oxford University Press.</p>
+<p>Murray, M. P. (1994). <em>A drunk and her dog: an illustration of cointegration and error correction</em>. The American Statistician, 48(1), 37-39.</p>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("^(?:http:|https:)\/\/(www\.)?fortietwo\.com");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1"></a><span class="co">---</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="an">title:</span><span class="co"> "O andar do bêbado e seu cachorro: entendendo cointegração no R"</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="an">date:</span><span class="co"> "2022-04-30"</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="an">date-modified:</span><span class="co"> "2023-03-10"</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="an">author:</span><span class="co"> "Fernando da Silva"</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="an">description:</span><span class="co"> "Uma analogia sobre cointegração de Engle-Granger e uma aplicação em R"</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="an">categories:</span><span class="co"> [Time Series, Cointegration, R, Português]</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="an">image:</span><span class="co"> "imgs/random_walk.png"</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="an">aliases:</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="co">  - /posts/series-temporais/cointegration/index.html</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="co">---</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a></span>
+<span id="cb1-13"><a href="#cb1-13"></a>Muito utilizado no mercado financeiro para estratégias *long-short*, arbitragem estatística, *pairs trading* e em análise e previsão de séries temporais macroeconômicas, o conceito de cointegração é ao mesmo tempo fascinante e intimidador de se compreender. Por isso, neste breve texto iremos explicar o que é cointegração com um exemplo intuitivo e fazer um exercício simples aplicando o teste de cointegração de Engle-Granger com pares de ações brasileiras usando o R!</span>
+<span id="cb1-14"><a href="#cb1-14"></a></span>
+<span id="cb1-15"><a href="#cb1-15"></a></span>
+<span id="cb1-16"><a href="#cb1-16"></a><span class="fu">## A analogia do bêbado e seu cachorro</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a></span>
+<span id="cb1-18"><a href="#cb1-18"></a>As definições matemáticas de cointegração, e tópicos relacionados, são um tanto quanto sofisticadas, mas o seu conceito é simples o suficiente para ser introduzido com a cômica analogia do andar do bêbado e seu cachorro. Os créditos da analogia são inteiramente de Michael P. Murray que escreveu, em 1994, um *paper* didático de apenas 3 páginas elucidando o conceito de cointegração com o conto do andar do bêbado.</span>
+<span id="cb1-19"><a href="#cb1-19"></a></span>
+<span id="cb1-20"><a href="#cb1-20"></a>Imagine que você esteja andando na rua da sua cidade e aviste um bêbado que acaba de sair do bar, vagando em direção a sua casa. Você percebe que o bêbado caminha de maneira peculiar e imprevisível, algumas vezes se desviando para a esquerda e outras para a direita enquanto tenta, com dificuldades, seguir o seu caminho. Ao observar a trajetória do bêbado pode-se dizer que seus passos são nada mais do que uma sequência aleatória de passos. Na econometria, chamamos a trajetória do bêbado de **passeio aleatório** (*random walk*), de maneira a descrever o comportamento de muitas das séries econômicas que existem.</span>
+<span id="cb1-21"><a href="#cb1-21"></a></span>
+<span id="cb1-22"><a href="#cb1-22"></a>Por andar de forma aleatória, se você desviar o olhar e parar de observar o bêbado andando, será difícil dizer onde o bêbado estará após um determinado tempo, pois sua trajetória é imprevisível. Uma das características das trajetórias do tipo passeio aleatório, como a do bêbado, é de que a melhor previsão sobre um valor futuro é o último valor observado. Dessa forma, o seu palpite sobre a localização atual do bêbado poderia ser algo como o último lugar onde você o avistou, ou seja, na saída do bar.</span>
+<span id="cb1-23"><a href="#cb1-23"></a></span>
+<span id="cb1-24"><a href="#cb1-24"></a>Agora imagine que o bêbado tenha um cachorro amigo, sem coleira, que o acompanha. De forma similar ao bêbado, o cachorro também segue uma sequência aleatória de passos, sendo atraído por cada cheiro novo e estímulos que sente no caminho. Sempre que o bêbado percebe que o cachorro foi muito longe ele o chama: "Thor!". E o cachorro obedece o chamado retornando para perto de seu dono, caracterizando assim uma correção da distância entre ambos.</span>
+<span id="cb1-25"><a href="#cb1-25"></a></span>
+<span id="cb1-26"><a href="#cb1-26"></a>Se fossemos representar por meio de um gráfico a trajetória do bêbado e do cachorro ao longo do tempo e em relação a um ponto de referência qualquer (como o bar), seria algo como:</span>
+<span id="cb1-27"><a href="#cb1-27"></a></span>
+<span id="cb1-28"><a href="#cb1-28"></a><span class="al">![](imgs/random_walk.png)</span></span>
+<span id="cb1-29"><a href="#cb1-29"></a></span>
+<span id="cb1-30"><a href="#cb1-30"></a>Observando as trajetórias de ambos, pode-se dizer que mesmo que a localização atual do bêbado após um tempo seja imprevisível, a localização do cachorro é relativamente previsível, pois ele não se afastará muito do seu dono. Dessa forma, agora um bom palpite sobre a localização do bêbado, por exemplo, pode ser dado uma vez que você tenha encontrado o cachorro, e vice-versa, pois conforme seguem dando passos aleatórios também corrigem a distância entre ambos. Na econometria, chamamos isso formalmente de **mecanismo de correção de erros**.</span>
+<span id="cb1-31"><a href="#cb1-31"></a></span>
+<span id="cb1-32"><a href="#cb1-32"></a>Note, também, que ambas as trajetórias são o que chamamos de séries temporais não-estacionárias, dado que quanto mais tempo passa é mais provável que o bêbado e seu cachorro estejam vagando bem longe de onde foram vistos por último. Se for verdade que a distância entre eles seja corrigida por um mecanismo de correção de erros, então a distância entre as trajetórias é dita *cointegrada de ordem zero*.</span>
+<span id="cb1-33"><a href="#cb1-33"></a></span>
+<span id="cb1-34"><a href="#cb1-34"></a>Para entender o que a expressão *cointegrada de ordem zero* significa, vale primeiro entender o que são *séries integradas*. Séries temporais não-estacionárias que se tornam estacionárias quando diferenciadas *n* vezes são ditas *integradas de ordem n* ou, simplesmente, $\text{I}(n)$. Para duas séries temporais serem cointegradas, cada série precisa ser integrada de mesma ordem, *n*; por isso o termo *cointegração*. Sendo assim, um conjunto de séries temporais, todas integradas de ordem *n*, são ditas cointegradas se e somente se alguma combinação linear das séries é integrada de ordem menor do que *n*. Tal combinação linear foi chamada de **relação de cointegração**, conforme o trabalho de Engle e Granger (1987).</span>
+<span id="cb1-35"><a href="#cb1-35"></a></span>
+<span id="cb1-36"><a href="#cb1-36"></a><span class="fu">## Cointegração no sentido de Engle-Granger</span></span>
+<span id="cb1-37"><a href="#cb1-37"></a></span>
+<span id="cb1-38"><a href="#cb1-38"></a>De maneira um pouco mais formal, partindo de um modelo de passeio aleatório para as trajetórias do bêbado ($x_t$) e do cachorro ($y_t$), temos:</span>
+<span id="cb1-39"><a href="#cb1-39"></a></span>
+<span id="cb1-40"><a href="#cb1-40"></a>$$u_t = x_t - x_{t-1}$$</span>
+<span id="cb1-41"><a href="#cb1-41"></a>$$w_t = y_t - y_{t-1}$$</span>
+<span id="cb1-42"><a href="#cb1-42"></a></span>
+<span id="cb1-43"><a href="#cb1-43"></a>onde $u_t$ e $w_t$ representam, respectivamente, o passeio aleatório do bêbado e do cachorro ao longo do tempo $t$ e são ruído branco estacionários. Podemos então modelar a "trajetória cointegrada" do bêbado e do cachorro como:</span>
+<span id="cb1-44"><a href="#cb1-44"></a></span>
+<span id="cb1-45"><a href="#cb1-45"></a>$$u_t + c(y_{t-1} - x_{t-1}) = x_t - x_{t-1}$$</span>
+<span id="cb1-46"><a href="#cb1-46"></a>$$w_t + d(x_{t-1} - y_{t-1}) = y_t - y_{t-1}$$</span>
+<span id="cb1-47"><a href="#cb1-47"></a></span>
+<span id="cb1-48"><a href="#cb1-48"></a>onde $u_t$ e $w_t$ são novamente os passeios aleatórios do bêbado e do cachorro e os termos adicionais no lado esquerdo das equações são os *termos de correção de erro* pelo quais o bêbado e o cachorro corrigem a distância um do outro, ou seja, permanecem próximos. Podemos então dizer que, das equações acima, $(y_{t-1} - x_{t-1})$ é uma relação de cointegração entre a trajetória do bêbado e do cachorro. Dessa forma, se estabelece uma relação de equilíbrio de longo prazo entre as trajetórias.</span>
+<span id="cb1-49"><a href="#cb1-49"></a></span>
+<span id="cb1-50"><a href="#cb1-50"></a>Note que se os termos de correção de erros forem não-estacionários, então as trajetórias modeladas para o bêbado e o cachorro também seriam não-estacionárias, portanto ambos iriam provavelmente se distanciar bastante ao longo do tempo. Nesse caso, diríamos que as séries temporais das trajetórias do bêbado e do cachorro não são cointegradas de ordem zero. No entanto, Engle e Granger (1987) provaram que se a trajetória do bêbado e do cachorro são ambas integradas de ordem 1 e seguem o descrito nas equações acima, então as trajetórias cointegram.</span>
+<span id="cb1-51"><a href="#cb1-51"></a></span>
+<span id="cb1-52"><a href="#cb1-52"></a>A analogia do bêbado e seu cachorro é uma boa forma de entender os conceitos básicos de cointegração e do mecanismo de correção de erro, no entanto, há inúmeros detalhes técnicos que devem ser considerados em aplicações com dados reais. Para se aprofundar mais no tema considere um curso de econometria de séries temporais.</span>
+<span id="cb1-53"><a href="#cb1-53"></a></span>
+<span id="cb1-54"><a href="#cb1-54"></a>O conceito de cointegração é bastante utilizado em exercícios de macroeconomia, mas também pode ser usado no mercado financeiro com o objetivo de identificar relações — como a do bêbado e seu cachorro — entre ativos e realizar operações lucrativas com a técnica. Um exemplo disso são as estratégias de *pairs trading*, onde se realiza operações com pares de ativos que apresentem relação de cointegração de modo a obter lucro com a arbitragem. O grande desafio dessa aplicação é encontrar o par de ativo que apresente essas características.</span>
+<span id="cb1-55"><a href="#cb1-55"></a></span>
+<span id="cb1-56"><a href="#cb1-56"></a><span class="fu">## Teste de Cointegração de Engle-Granger</span></span>
+<span id="cb1-57"><a href="#cb1-57"></a></span>
+<span id="cb1-58"><a href="#cb1-58"></a>De maneira prática, para verificar se um conjunto de séries temporais $y_t$ e $x_t$ cointegram, é preciso seguir os procedimentos propostos por Engle e Granger (1987):</span>
+<span id="cb1-59"><a href="#cb1-59"></a></span>
+<span id="cb1-60"><a href="#cb1-60"></a><span class="ss">1. </span>Verificar se as séries são estacionárias;</span>
+<span id="cb1-61"><a href="#cb1-61"></a><span class="ss">2. </span>Estimar a regressão cointegrante das séries: $y_t = \alpha + \beta x_t + \epsilon_t$;</span>
+<span id="cb1-62"><a href="#cb1-62"></a><span class="ss">3. </span>Verificar se o resíduo da regressão cointegrante é estacionário usando os valores críticos de Engle e Granger (1987);</span>
+<span id="cb1-63"><a href="#cb1-63"></a><span class="ss">4. </span>Se o resíduo for estacionário, a regressão cointegrante não é espúria e pode-se estimar um modelo de correção de erros para obter a relação de equilíbrio das séries.</span>
+<span id="cb1-64"><a href="#cb1-64"></a></span>
+<span id="cb1-65"><a href="#cb1-65"></a>A seguir mostraremos como aplicar o teste com um par de ações negociadas na B3 e para isso usaremos a linguagem R.</span>
+<span id="cb1-66"><a href="#cb1-66"></a></span>
+<span id="cb1-67"><a href="#cb1-67"></a><span class="fu">## Exemplo no R</span></span>
+<span id="cb1-68"><a href="#cb1-68"></a></span>
+<span id="cb1-69"><a href="#cb1-69"></a>O exemplo utilizará o par de ações PETR3 e PETR4 no período de 28 de março de 2021 até 28 de março de 2022. Os dados são públicos e podem ser acessados pelo Yahoo Finance, havendo opção de usar pacotes ou web scraping para extrair os dados. O código abaixo faz a extração e tratamento de dados:</span>
+<span id="cb1-70"><a href="#cb1-70"></a></span>
+<span id="cb1-71"><a href="#cb1-71"></a></span>
+<span id="cb1-72"><a href="#cb1-72"></a>Antes de partir para o teste vale visualizar as séries temporais:</span>
+<span id="cb1-73"><a href="#cb1-73"></a></span>
+<span id="cb1-74"><a href="#cb1-74"></a></span>
+<span id="cb1-75"><a href="#cb1-75"></a>As séries parecem apresentar uma trajetória de passeio aleatório, como a do bêbado e seu cachorro, algo comum em séries de ativos financeiros.</span>
+<span id="cb1-76"><a href="#cb1-76"></a></span>
+<span id="cb1-77"><a href="#cb1-77"></a>Agora vamos para a primeira etada do teste de cointegração de Engle-Granger, ou seja, verificar se as séries são estacionárias. Podemos fazer isso com o teste ADF através da função <span class="in">`adf.test()`</span>:</span>
+<span id="cb1-78"><a href="#cb1-78"></a></span>
+<span id="cb1-79"><a href="#cb1-79"></a></span>
+<span id="cb1-80"><a href="#cb1-80"></a>Conforme os resultados, falhamos em rejeitar a hipótese nula do teste de a série ter raiz unitária, ou seja, as séries são não-estacionárias nos testes considerados (sem constante com tendência, com constante sem tendência e com constante e tendência).</span>
+<span id="cb1-81"><a href="#cb1-81"></a></span>
+<span id="cb1-82"><a href="#cb1-82"></a>Identificado que as séries são integradas de mesma ordem (nesse caso I(1), conforme pode ser confirmado usando a função <span class="in">`forecast::ndiffs`</span>), podemos prosseguir com as etapas 2 e 3 que envolvem estimar a regressão cointegrante e verificar a estacionariedade do resíduo desta regressão. No R, isso tudo pode ser feito com a função <span class="in">`coint.test()`</span>, que já toma o cuidado de usar os valores críticos corretos para testar os resíduos, conforme MacKinnon (1991).</span>
+<span id="cb1-83"><a href="#cb1-83"></a></span>
+<span id="cb1-84"><a href="#cb1-84"></a></span>
+<span id="cb1-85"><a href="#cb1-85"></a></span>
+<span id="cb1-86"><a href="#cb1-86"></a>Note que a função aplica 3 especificações: sem tendência, com tendência e com tendência quadrática. Em outros pacotes estatísticos e econométricos, como no Gretl, considera-se geralmente somente a primeira. Conforme os resultados, pelo p-valor da primeira especificação, sem tendência, temos que o resíduo da regressão cointegrante é estacionário, mas isso não se verifica para outras especificações. Em outras palavras, há evidências de que **as séries PETR3 e PETR4 cointegram**, para a amostra de dados selecionada e com base no teste sobre o resíduo sem tendência (se o resíduo apresentar tendência, outro tipo do teste deve ser considerado).</span>
+<span id="cb1-87"><a href="#cb1-87"></a></span>
+<span id="cb1-88"><a href="#cb1-88"></a></span>
+<span id="cb1-89"><a href="#cb1-89"></a><span class="fu">## Referências</span></span>
+<span id="cb1-90"><a href="#cb1-90"></a></span>
+<span id="cb1-91"><a href="#cb1-91"></a>Abordamos brevemente o conceito de cointegração de séries temporais no sentido de Engle-Granger. Há vários buracos deixados ao longo do texto que precisam de mais espaço e conhecimentos prévios para serem preenchidos. Espero poder abordar outros desses tópicos sobre séries temporais adiante, mas por enquanto aproveite para conferir abaixo os trabalhos citados.</span>
+<span id="cb1-92"><a href="#cb1-92"></a></span>
+<span id="cb1-93"><a href="#cb1-93"></a>Engle, R. F., &amp; Granger, C. W. (1987). *Co-integration and error correction: representation, estimation, and testing*. Econometrica: journal of the Econometric Society, 251-276.</span>
+<span id="cb1-94"><a href="#cb1-94"></a></span>
+<span id="cb1-95"><a href="#cb1-95"></a>MacKinnon, J. G. (1991). *Critical values for cointegration tests*, Ch. 13 in Long-run Economic Relationships: Readings in Cointegration, eds. R. F. Engle and C. W. J. Granger, Oxford, Oxford University Press.</span>
+<span id="cb1-96"><a href="#cb1-96"></a></span>
+<span id="cb1-97"><a href="#cb1-97"></a>Murray, M. P. (1994). *A drunk and her dog: an illustration of cointegration and error correction*. The American Statistician, 48(1), 37-39.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Made with&nbsp;<a href="https://quarto.org/">Quarto</a></p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

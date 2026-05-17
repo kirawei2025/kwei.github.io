@@ -1,0 +1,54 @@
+/* css styles */
+
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Lato');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Mono');
+
+/* Navbar */
+.navbar-brand{
+  font-family: "Fira Mono";
+}
+
+/* Footer */
+.nav-footer {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    padding-top: .5rem;
+    padding-bottom: .5rem;
+    background-color: #282f6b;
+}
+.nav-footer-center {
+    flex: 1 1 0px;
+    min-height: auto;
+    text-align: center;
+}
+
+/* CV page iframe style */
+.embed-container {
+    position: relative;
+    padding-bottom: 100%;
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
+}
+.embed-container iframe,
+.embed-container object,
+.embed-container embed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Portfolio page card style */
+.portfolio-card {
+  color: var(--bs-body-color);
+  background-color: #dee2e6;
+  margin-bottom: 1em;
+  border: 0;
+}
