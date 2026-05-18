@@ -1,6 +1,6 @@
 ---
 title: "Kira Wei's Portfolio"
-pagetitle: "Fernando da Silva — Portfolio and blog of a half Data Scientist half Macroeconomist"
+pagetitle: "Kira Wei Website"
 author: ""
 image: images/kirawei.png
 about:

@@ -7,7 +7,7 @@ project:
 
 website:
   title: "Kira Wei"
-  description: "Portfolio of a data scientist"
+  description: "Kira Wei Website"
   navbar:
     left:
       - href: index.qmd
@@ -16,8 +16,6 @@ website:
       #   text: Experience
       - href: projects.qmd
         text: Data Science Projects
-      - text: Blog
-        href: projects.qmd
     right:
       - href: https://www.linkedin.com/in/mengjiawei/
         icon: linkedin
