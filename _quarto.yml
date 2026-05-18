@@ -7,7 +7,7 @@ project:
 
 website:
   title: "Kira Wei"
-  description: "Kira Wei Website"
+#  description: "Kira Wei Website"
   navbar:
     left:
       - href: index.qmd
