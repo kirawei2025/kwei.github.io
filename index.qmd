@@ -1,6 +1,6 @@
 ---
 title: "Kira Wei's Portfolio"
-pagetitle: "Kira Wei Website"
+#pagetitle: "Kira Wei Website"
 author: ""
 image: images/kirawei.png
 about:
@@ -24,13 +24,25 @@ format:
 
 
 <div id="abouten">
-I'm a data scientist specialized in economics and finance. I try to solve real world problems with simple models.
+Ah, my mistake! Having psychology as your undergraduate foundation makes the story even better—it means human behavior and consumer insights have been baked into your mindset from the very start of your academic journey.
 
-In college, where I studied economics, I founded to analyze data and discovered my vocation there. Today I work at focused on time series analysis, econometrics, and machine learning applications, aiming to explain and predict the behavior of economic variables, allowing data-based decisions. My work has already helped over students.
+Here is the revised, ultra-focused version:
 
-My main skills in my are predictive models; time series; data analysis and visualization; data products such as reports and dashboards; and technologies such as R, Python, Git, GitHub, and SQL.
+Hi, I'm Kira Wei 👋
+I bridge the gap between data science, human behavior, and strategic profitability.
 
-I love constantly learning new things, sharing knowledge openly and interacting with people on these topics.
+With a unique trajectory spanning a BS in Psychology, an MBA (Marketing & Pricing), and an MS in Data Science, I look at revenue management through a multidimensional lens. I don't just see numbers on a spreadsheet—I manage the business strategy and the data architecture needed to scale it.
+
+🎯 What I Do
+I specialize in Pricing Optimization and Revenue Management. I transform complex behavioral and financial datasets into predictive models and dynamic pricing strategies that maximize profitability without sacrificing customer trust.
+
+Data Science: Predictive modeling, statistical analysis, causal inference.
+
+Pricing Strategy: Value-based pricing, elasticity modeling, and market positioning.
+
+When I’m not tuning revenue models or diving into Python, I am happily being managed by my two cats. 🐈‍⬛🐈
+
+Let's connect! Feel free to reach out to discuss my articles and code-chat.
 </div>
 
 
