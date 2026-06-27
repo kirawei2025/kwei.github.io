@@ -24,10 +24,6 @@ format:
 
 
 <div id="abouten">
-Ah, my mistake! Having psychology as your undergraduate foundation makes the story even better—it means human behavior and consumer insights have been baked into your mindset from the very start of your academic journey.
-
-Here is the revised, ultra-focused version:
-
 Hi, I'm Kira Wei 👋
 I bridge the gap between data science, human behavior, and strategic profitability.
 
@@ -45,6 +41,8 @@ When I’m not tuning revenue models or diving into Python, I am happily being m
 Let's connect! Feel free to reach out to discuss my articles and code-chat.
 </div>
 
+
+![](images/cat.png){width=75%}
 
 <script src="styles/js/txt-animate.js"></script>
 <script src="styles/js/txt-showhide.js"></script>
