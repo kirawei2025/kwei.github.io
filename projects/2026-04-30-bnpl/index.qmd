@@ -43,8 +43,8 @@ https://www.federalreserve.gov/consumerscommunities/shed_data.htm
 
 - **Dataset 1**: 2022 Survey Data csv file
 - **Dataset 2**: 2023 Survey Data cvs file
-- **Dataset 2**: 2024 Survey Data cvs file
-- **Dataset 2**: 2025 Survey Data cvs file
+- **Dataset 3**: 2024 Survey Data cvs file
+- **Dataset 4**: 2025 Survey Data cvs file
 
 Due to inconsistencies in survey IDs and answers across the four years, data processing was performed to synchronize and merge the datasets. Separate models were built that only include 2025 data due to the survey questions that only exist in 2025 data.
 
@@ -103,7 +103,7 @@ The data preprocessing workflow focused on consolidating multiple yearly survey 
 | BNPL4_e | Why you choose to use BNPL service? - Only way I could afford it |
 | BNPL4_f | Why you choose to use BNPL service? - Only accepted payment method I had |
 
-After merging the yearly files into a single data_merged structure, I performed feature harmonisation to enforce cross-year structural consistency. This included aligning variables including standardising values, add missing columns for certain years, remove non-standard entries, and etc. These inconsistencies are introduced by changes in survey design over time. Note that because certain questions were first introduced in 2024 or 2025, no historical records exist for them in the 2022 and 2023 data. These missing values will require careful handling during model training. Below is a snippet of the survey questions and their corresponding values by year.
+After merging the yearly files into a single data_merged structure, I performed feature harmonisation to enforce cross-year structural consistency. This included aligning variables including standarising values, add missing columns for certain years, remove non-standard entries, and etc. These inconsistencies are introduced by changes in survey design over time. Note that because certain questions were first introduced in 2024 or 2025, no historical records exist for them in the 2022 and 2023 data. These missing values will require careful handling during model training. Below is a snippet of the survey questions and their corresponding values by year.
 
 ![](./imgs/data-preprocessing.png)
 
